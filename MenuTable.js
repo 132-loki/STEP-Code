@@ -32,8 +32,8 @@ function getMenuNutritionContent(node)
 	
 	var ColHeader1='';	
 	ColHeader1=ColHeader1+'<td class="MenuDetails1" colspan="3">MENU Details</td>';
-	ColHeader1=ColHeader1+'<td class="ItemDetails1" colspan="7">ITEM Details</td>';
-	ColHeader1=ColHeader1+'<td class="NutritionDetails1" colspan="8">DISH RECIPE - NUTRITION (Per Portion)</td>';
+	ColHeader1=ColHeader1+'<td class="ItemDetails1" colspan="10">ITEM Details</td>';
+	ColHeader1=ColHeader1+'<td class="NutritionDetails1" colspan="8">NUTRITION (Per Portion)</td>';
 	ColHeader1='<tr>'+ColHeader1+'</tr>';
 	
 	var ColHeader2='';
@@ -46,7 +46,10 @@ function getMenuNutritionContent(node)
 	ColHeader2=ColHeader2+'<td class="ItemDetails2"><b>'+"Item Name"+'</b></td>';
 	ColHeader2=ColHeader2+'<td class="ItemDetails2"><b>'+"Portion Serving"+'</b></td>';
 	ColHeader2=ColHeader2+'<td class="ItemDetails2"><b>'+"Total Weight"+'</b></td>';
-	ColHeader2=ColHeader2+'<td class="ItemDetails2"><b>'+"Weight Per Portion"+'</b></td>';
+	ColHeader2=ColHeader2+'<td class="ItemDetails2"><b>'+"Usage Unit"+'</b></td>';
+    ColHeader2=ColHeader2+'<td class="ItemDetails2"><b>'+"Base Unit"+'</b></td>';
+    ColHeader2=ColHeader2+'<td class="ItemDetails2"><b>'+"Volume Of An Each"+'</b></td>';
+    ColHeader2=ColHeader2+'<td class="ItemDetails2"><b>'+"Weight Per Portion"+'</b></td>';
 	ColHeader2=ColHeader2+'<td class="NutritionDetails2"><b>'+"Energy (KJ)"+'</b></td>';
 	ColHeader2=ColHeader2+'<td class="NutritionDetails2"><b>'+"Energy (Kcal)"+'</b></td>';
 	ColHeader2=ColHeader2+'<td class="NutritionDetails2"><b>'+"Fat (g)"+'</b></td>';
@@ -84,12 +87,24 @@ function getMenuNutritionContent(node)
 			            subMenuArr[1].push(currSM.getValue("subMenuSortOrder").getSimpleValue());
 			    }
 			}
-	
+			else if (currSM.getObjectType().getID() == "SubMenuASGCUPSR")
+			{
+				if (currSM.getName() == "Upgrade")
+			    {
+			        SubMenuASGCUPSR_UP = currSM;
+			        flag_Upgrade = "Yes";
+			    }
+			}
 		}
 		subMenuArr = sortingSM(subMenuArr, subMenuArr[0].length);
 
-	 
-	
+		// push UPGRADE SUbMENU Type into subMenuArr here at the end of the subMenuArr
+		// 
+		if (flag_Upgrade == "Yes")
+		{
+		    subMenuArr[0].push(SubMenuASGCUPSR_UP);
+		    subMenuArr[1].push(0);
+		}
 		
 		for (var a = 0; a < subMenuArr[0].length; a++)
 		{
@@ -106,7 +121,10 @@ function getMenuNutritionContent(node)
 		        {
 		            dishArr.push(currDish);
 		        }
-
+		        else if (currDish.getObjectType().getID() == "UpgradeObj")
+		        {
+		            dishArr.push(currDish);
+		        }
 		    }		
 		    if (dishArr.length > 0)
 		    {
@@ -120,29 +138,31 @@ function getMenuNutritionContent(node)
 						{
 							// ING and SR check
 							var showDishANData = dishArr[i].getValue("ShowAN_From_DishRecipe").getSimpleValue();
-							if (showDishANData == "Yes") 
-							{
+							//if (showDishANData == "Yes") 
+						//	{
 								//Print Dish Recipes
 								htmlContent=htmlContent+getCoreDishContent(currSM,dishArr[i],"");
-							}
-							else
-							{
-								htmlContent=htmlContent+getIngSRContent(currSM,dishArr[i]);
-							}
+                                htmlContent=htmlContent+getIngSRContent(currSM,dishArr[i]);
+							//}
+						//	else
+						//	{
+							//	htmlContent=htmlContent+getIngSRContent(currSM,dishArr[i]);
+							//}
 						}
 						else
 						{
 							var showDishANData = dishArr[i].getValue("ShowAN_From_DishRecipe").getSimpleValue();
-							if (showDishANData == "Yes") 
-							{
+						//	if (showDishANData == "Yes") 
+						//	{
 								//Print Dish Recipes
 								htmlContent=htmlContent+getCoreDishContent(currSM,dishArr[i],"");
-							}
-							else
-							{
+                                htmlContent=htmlContent+getIngSRContent(currSM,dishArr[i]);
+							//}
+						//	else
+						//	{
 								//Call Function to Print from ING and SR
-								htmlContent=htmlContent+getIngSRContent(currSM,dishArr[i]);
-							}
+								//htmlContent=htmlContent+getIngSRContent(currSM,dishArr[i]);
+							//}
 							//Print GCSR
 							var currDishGCSRRefs = dishArr[i].getReferences(recGCSRRefType).iterator();
 							while (currDishGCSRRefs.hasNext()) 
@@ -163,7 +183,11 @@ function getMenuNutritionContent(node)
 						}
 					}
 					
-				
+					//else // Upgrade
+					//{
+						//Print Upgrade
+						//htmlContent=htmlContent+getCoreDishContent(currSM,dishArr[i],"");
+					//}
 				}
 				
 				if(currSM.getValue("ShowGCWithRecipe").getSimpleValue()=="No")
@@ -346,7 +370,12 @@ function getCoreDishContent(currSM,item,itemDish)
 		}
 		ItemID= item.getValue("SourceGCSRID").getSimpleValue();
 	}
-
+	else if(ObjectType=="UpgradeObj")
+	{
+		ObjectType="Upgrade";
+		CoreDishID=item.getID();
+		ItemID=item.getID();
+	}
 	else
 	{
 		CoreDishID=item.getID();
@@ -357,7 +386,20 @@ function getCoreDishContent(currSM,item,itemDish)
 	keyItemDetails=keyItemDetails+'<td>'+brand+'</td>';
 	keyItemDetails=keyItemDetails+'<td>'+node.getName()+'</td>';
 	keyItemDetails=keyItemDetails+'<td>'+subMenuName+'</td>';
-	keyItemDetails=keyItemDetails+'<td>'+ObjectType+'</td>';
+  //  if(ObjectType == "DishRecipe")
+	//keyItemDetails=keyItemDetails+'<td>'+ObjectType+'</td>';
+  logger.info("hajhjas " +ObjectType);
+  if (ObjectType == "DishRecipe") {
+    keyItemDetails = keyItemDetails + '<td style="background-color: green;">' + ObjectType + '</td>';
+} else if (ObjectType == "Ingredient") {
+    keyItemDetails = keyItemDetails + '<td style="background-color: yellow;">' + ObjectType + '</td>';
+} else if (ObjectType == "Guest Choice") {
+    keyItemDetails = keyItemDetails + '<td style="background-color: #FFBF00;">' + ObjectType + '</td>';
+} else {
+    
+    keyItemDetails = keyItemDetails + '<td>' + ObjectType + '</td>';
+}
+
 	keyItemDetails=keyItemDetails+'<td>'+CoreDishID+'</td>';
 	keyItemDetails=keyItemDetails+'<td>'+ItemID+'</td>';
 		
@@ -369,9 +411,16 @@ function getCoreDishContent(currSM,item,itemDish)
 		dishPortion=1;
 	}
 	var totalWeight=item.getValue("TotalWeight").getSimpleValue();
+    var UsageUnit=item.getValue("UsageUnit").getSimpleValue();
+    var BaseUnit=item.getValue("BaseUnit").getSimpleValue();
+    var VolumeofAnEach=item.getValue("VolumeOfAnEach").getSimpleValue();
+    
 	var portionWeight=totalWeight/dishPortion;
 	keyItemDetails=keyItemDetails+'<td>'+dishPortion+'</td>';
 	keyItemDetails=keyItemDetails+'<td>'+totalWeight+'</td>';
+    keyItemDetails=keyItemDetails+'<td>'+UsageUnit+'</td>';
+    keyItemDetails=keyItemDetails+'<td>'+BaseUnit+'</td>';
+    keyItemDetails=keyItemDetails+'<td>'+VolumeofAnEach+'</td>';
 	keyItemDetails=keyItemDetails+'<td>'+portionWeight+'</td>';
 	
 	var contentItemDIVDishNutrition = ItemNutrition(item,"Core");
@@ -391,8 +440,13 @@ function getIngSRContent(currSM,item)
 	while (currDishIngRefs.hasNext()) 
 	{
 	    var currIngRef = currDishIngRefs.next();
+		var showDishRefANData = currIngRef.getValue("IncludeIngSRIn_DigitalMenu").getSimpleValue();
 
-		
+        var UsageUnit=currIngRef.getTarget().getValue("UsageUnit").getSimpleValue();
+        var BaseUnit=currIngRef.getTarget().getValue("BaseUnit").getSimpleValue();
+        var VolumeofAnEach=currIngRef.getTarget().getValue("VolumeOfAnEach").getSimpleValue();
+		if(showDishRefANData!="No")
+		{
 			var ObjectType=currIngRef.getTarget().getObjectType().getID();
 			var ItemID=currIngRef.getTarget().getID();
 			var ItemName=currIngRef.getTarget().getValue("DigitalMenuName_NSF").getSimpleValue();
@@ -400,25 +454,43 @@ function getIngSRContent(currSM,item)
 			keyItemDetails=keyItemDetails+'<td>'+brand+'</td>';
 			keyItemDetails=keyItemDetails+'<td>'+node.getName()+'</td>';
 			keyItemDetails=keyItemDetails+'<td>'+subMenuName+'</td>';
-			keyItemDetails=keyItemDetails+'<td>'+ObjectType+'</td>';
+            if (ObjectType == "DishRecipe") {
+                keyItemDetails = keyItemDetails + '<td style="background-color: green;">' + ObjectType + '</td>';
+            } else if (ObjectType == "Ingredient") {
+                keyItemDetails = keyItemDetails + '<td style="background-color: yellow;">' + ObjectType + '</td>';
+            }  else if (ObjectType == "Guest Choice"){
+                keyItemDetails = keyItemDetails + '<td style="background-color: #FFBF00;">' + ObjectType + '</td>';
+            } else {
+                
+                keyItemDetails = keyItemDetails + '<td>' + ObjectType + '</td>';
+            }
+		//	keyItemDetails=keyItemDetails+'<td>'+ObjectType+'</td>';
 			keyItemDetails=keyItemDetails+'<td>'+CoreDishID+'</td>';
 			keyItemDetails=keyItemDetails+'<td>'+ItemID+'</td>';
 			keyItemDetails=keyItemDetails+'<td>'+ItemName+'</td>';
+            keyItemDetails=keyItemDetails+'<td>'+UsageUnit+'</td>';
+            keyItemDetails=keyItemDetails+'<td>'+BaseUnit+'</td>';
+            keyItemDetails=keyItemDetails+'<td>'+VolumeofAnEach+'</td>';
 			
 			keyItemDetails=keyItemDetails+'<td>'+""+'</td>';
 	keyItemDetails=keyItemDetails+'<td>'+""+'</td>';
 	keyItemDetails=keyItemDetails+'<td>'+""+'</td>';
 			
 			contentItemDIVDishNutrition=contentItemDIVDishNutrition+'<tr>'+keyItemDetails+ItemNutrition(currIngRef.getTarget(),currIngRef)+'</tr>';
-		
+		}
 	}
 	
 	var currDishSRRefs = item.getReferences(recSRRefType).iterator();
 	while (currDishSRRefs.hasNext()) 
 	{   	
 		var currSRRef = currDishSRRefs.next();
+		var showDishRefANData = currSRRef.getValue("IncludeIngSRIn_DigitalMenu").getSimpleValue();
+        var UsageUnit=currSRRef.getTarget().getValue("UsageUnit").getSimpleValue();
+        var BaseUnit=currSRRef.getTarget().getValue("BaseUnit").getSimpleValue();
+        var VolumeofAnEach=currSRRef.getTarget().getValue("VolumeOfAnEach").getSimpleValue();
 
-		
+		if(showDishRefANData!="No")
+		{
 			var ObjectType=currSRRef.getTarget().getObjectType().getID();
 			var ItemID=currSRRef.getTarget().getID();
 			var ItemName=currSRRef.getTarget().getValue("DigitalMenuName_NSF").getSimpleValue();
@@ -426,18 +498,31 @@ function getIngSRContent(currSM,item)
 			keyItemDetails=keyItemDetails+'<td>'+brand+'</td>';
 			keyItemDetails=keyItemDetails+'<td>'+node.getName()+'</td>';
 			keyItemDetails=keyItemDetails+'<td>'+subMenuName+'</td>';
-			keyItemDetails=keyItemDetails+'<td>'+ObjectType+'</td>';
+            if (ObjectType == "DishRecipe") {
+                keyItemDetails = keyItemDetails + '<td style="background-color: green;">' + ObjectType + '</td>';
+            } else if (ObjectType == "Ingredient") {
+                keyItemDetails = keyItemDetails + '<td style="background-color: yellow;">' + ObjectType + '</td>';
+            }  else if (ObjectType == "Guest Choice") {
+                keyItemDetails = keyItemDetails + '<td style="background-color: #FFBF00;">' + ObjectType + '</td>';
+            } else {
+                
+                keyItemDetails = keyItemDetails + '<td>' + ObjectType + '</td>';
+            }
+
+			//keyItemDetails=keyItemDetails+'<td>'+ObjectType+'</td>';
 			keyItemDetails=keyItemDetails+'<td>'+CoreDishID+'</td>';
 			keyItemDetails=keyItemDetails+'<td>'+ItemID+'</td>';
 			keyItemDetails=keyItemDetails+'<td>'+ItemName+'</td>';
-			
+            keyItemDetails=keyItemDetails+'<td>'+UsageUnit+'</td>';
+            keyItemDetails=keyItemDetails+'<td>'+BaseUnit+'</td>';
+            keyItemDetails=keyItemDetails+'<td>'+VolumeofAnEach+'</td>';
 			keyItemDetails=keyItemDetails+'<td>'+""+'</td>';
 	keyItemDetails=keyItemDetails+'<td>'+""+'</td>';
 	keyItemDetails=keyItemDetails+'<td>'+""+'</td>';
 			
 			
 			contentItemDIVDishNutrition=contentItemDIVDishNutrition+'<tr>'+keyItemDetails+ItemNutrition(currSRRef.getTarget(),currSRRef)+'</tr>';	
-		
+		}
 	}
 	return (contentItemDIVDishNutrition);
 }
@@ -509,7 +594,19 @@ function ItemNutrition(Item, ItemRef)
 		    "GuestChoiceTotalSalt"
 		];
 	}
-
+	else if(ObjectType=="UpgradeObj")
+	{
+		var nutrition = [
+		    "UpgradeTotalEnergyKJ",
+		    "UpgradeTotalEnergyKCal",
+		    "UpgradeTotalFat",
+		    "UpgradeTotalOfWhichSaturates",
+		    "UpgradeTotalCarbohydrates",
+		    "UpgradeTotalSugars",
+		    "UpgradeTotalProtein",
+		    "UpgradeTotalSalt"
+		];
+	}
 	else if(ObjectType=="Ingredient")
 	{
 		var nutrition = [
