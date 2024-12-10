@@ -9,8 +9,6 @@ var dishGCSRUniqueArray=[];
 	var recSRRefType = step.getReferenceTypeHome().getReferenceTypeByID("RecipeToSubRecipe");
 	var recGCSRRefType = step.getReferenceTypeHome().getReferenceTypeByID("RecipetoGCSubRecipe");
 	
-	
-
 
 var result = getMenuNutritionContent(node);
 
@@ -32,7 +30,7 @@ function getMenuNutritionContent(node)
 	
 	var ColHeader1='';	
 	ColHeader1=ColHeader1+'<td class="MenuDetails1" colspan="3">MENU Details</td>';
-	ColHeader1=ColHeader1+'<td class="ItemDetails1" colspan="10">ITEM Details</td>';
+	ColHeader1=ColHeader1+'<td class="ItemDetails1" colspan="12">ITEM Details</td>';
 	ColHeader1=ColHeader1+'<td class="NutritionDetails1" colspan="8">NUTRITION (Per Portion)</td>';
 	ColHeader1='<tr>'+ColHeader1+'</tr>';
 	
@@ -45,11 +43,15 @@ function getMenuNutritionContent(node)
 	ColHeader2=ColHeader2+'<td class="ItemDetails2"><b>'+"Item ID"+'</b></td>';
 	ColHeader2=ColHeader2+'<td class="ItemDetails2"><b>'+"Item Name"+'</b></td>';
 	ColHeader2=ColHeader2+'<td class="ItemDetails2"><b>'+"Portion Serving"+'</b></td>';
-	ColHeader2=ColHeader2+'<td class="ItemDetails2"><b>'+"Total Weight"+'</b></td>';
+	ColHeader2=ColHeader2+'<td class="ItemDetails2"><b>'+"Total Weight / Base Unit Used"+'</b></td>';
+	    ColHeader2=ColHeader2+'<td class="ItemDetails2"><b>'+"Weight Per Portion"+'</b></td>';
 	ColHeader2=ColHeader2+'<td class="ItemDetails2"><b>'+"Usage Unit"+'</b></td>';
     ColHeader2=ColHeader2+'<td class="ItemDetails2"><b>'+"Base Unit"+'</b></td>';
-    ColHeader2=ColHeader2+'<td class="ItemDetails2"><b>'+"Volume Of An Each"+'</b></td>';
-    ColHeader2=ColHeader2+'<td class="ItemDetails2"><b>'+"Weight Per Portion"+'</b></td>';
+    ColHeader2=ColHeader2+'<td class="ItemDetails2"><b>'+"NSF Yield"+'</b></td>';
+    ColHeader2=ColHeader2+'<td class="ItemDetails2"><b>'+"Cooked Weight"+'</b></td>';
+    
+	ColHeader2=ColHeader2+'<td class="ItemDetails2"><b>'+"Volume Of An Each"+'</b></td>';
+
 	ColHeader2=ColHeader2+'<td class="NutritionDetails2"><b>'+"Energy (KJ)"+'</b></td>';
 	ColHeader2=ColHeader2+'<td class="NutritionDetails2"><b>'+"Energy (Kcal)"+'</b></td>';
 	ColHeader2=ColHeader2+'<td class="NutritionDetails2"><b>'+"Fat (g)"+'</b></td>';
@@ -388,7 +390,7 @@ function getCoreDishContent(currSM,item,itemDish)
 	keyItemDetails=keyItemDetails+'<td>'+subMenuName+'</td>';
   //  if(ObjectType == "DishRecipe")
 	//keyItemDetails=keyItemDetails+'<td>'+ObjectType+'</td>';
-  logger.info("hajhjas " +ObjectType);
+
   if (ObjectType == "DishRecipe") {
     keyItemDetails = keyItemDetails + '<td style="background-color: green;">' + ObjectType + '</td>';
 } else if (ObjectType == "Ingredient") {
@@ -418,10 +420,13 @@ function getCoreDishContent(currSM,item,itemDish)
 	var portionWeight=totalWeight/dishPortion;
 	keyItemDetails=keyItemDetails+'<td>'+dishPortion+'</td>';
 	keyItemDetails=keyItemDetails+'<td>'+totalWeight+'</td>';
-    keyItemDetails=keyItemDetails+'<td>'+UsageUnit+'</td>';
-    keyItemDetails=keyItemDetails+'<td>'+BaseUnit+'</td>';
-    keyItemDetails=keyItemDetails+'<td>'+VolumeofAnEach+'</td>';
-	keyItemDetails=keyItemDetails+'<td>'+portionWeight+'</td>';
+    	keyItemDetails=keyItemDetails+'<td>'+portionWeight+'</td>';
+	keyItemDetails=keyItemDetails+'<td>'+""+'</td>';
+    keyItemDetails=keyItemDetails+'<td>'+'g'+'</td>';
+    	keyItemDetails=keyItemDetails+'<td>'+""+'</td>';
+		keyItemDetails=keyItemDetails+'<td>'+""+'</td>';
+	keyItemDetails=keyItemDetails+'<td>'+""+'</td>';
+
 	
 	var contentItemDIVDishNutrition = ItemNutrition(item,"Core");
 	
@@ -440,13 +445,16 @@ function getIngSRContent(currSM,item)
 	while (currDishIngRefs.hasNext()) 
 	{
 	    var currIngRef = currDishIngRefs.next();
-		var showDishRefANData = currIngRef.getValue("IncludeIngSRIn_DigitalMenu").getSimpleValue();
+		//var showDishRefANData = currIngRef.getValue("IncludeIngSRIn_DigitalMenu").getSimpleValue();
 
         var UsageUnit=currIngRef.getTarget().getValue("UsageUnit").getSimpleValue();
-        var BaseUnit=currIngRef.getTarget().getValue("BaseUnit").getSimpleValue();
-        var VolumeofAnEach=currIngRef.getTarget().getValue("VolumeOfAnEach").getSimpleValue();
-		if(showDishRefANData!="No")
-		{
+        var BaseUnit=currIngRef.getValue("IngredientBaseUnit").getSimpleValue();
+		var BaseUnitUsed=currIngRef.getValue("IngredientBaseUnitsUsed").getSimpleValue();
+		var NSFYield = currIngRef.getValue("NSFYield_RecipeToIng").getSimpleValue();
+		var CookedWeightOfRecipe= currIngRef.getValue("WeightOfAnEach_NSF").getSimpleValue();
+        var VolumeofAnEach=currIngRef.getValue("VolumeOfAnEach").getSimpleValue();
+		
+		
 			var ObjectType=currIngRef.getTarget().getObjectType().getID();
 			var ItemID=currIngRef.getTarget().getID();
 			var ItemName=currIngRef.getTarget().getValue("DigitalMenuName_NSF").getSimpleValue();
@@ -468,29 +476,35 @@ function getIngSRContent(currSM,item)
 			keyItemDetails=keyItemDetails+'<td>'+CoreDishID+'</td>';
 			keyItemDetails=keyItemDetails+'<td>'+ItemID+'</td>';
 			keyItemDetails=keyItemDetails+'<td>'+ItemName+'</td>';
-            keyItemDetails=keyItemDetails+'<td>'+UsageUnit+'</td>';
-            keyItemDetails=keyItemDetails+'<td>'+BaseUnit+'</td>';
-            keyItemDetails=keyItemDetails+'<td>'+VolumeofAnEach+'</td>';
-			
 			keyItemDetails=keyItemDetails+'<td>'+""+'</td>';
-	keyItemDetails=keyItemDetails+'<td>'+""+'</td>';
-	keyItemDetails=keyItemDetails+'<td>'+""+'</td>';
+			 keyItemDetails=keyItemDetails+'<td>'+BaseUnitUsed+'</td>';
+		  
+             keyItemDetails=keyItemDetails+'<td>'+""+'</td>';
+		  keyItemDetails=keyItemDetails+'<td>'+UsageUnit+'</td>';
+            keyItemDetails=keyItemDetails+'<td>'+BaseUnit+'</td>';
+            keyItemDetails=keyItemDetails+'<td>'+NSFYield+'</td>';
+            keyItemDetails=keyItemDetails+'<td>'+CookedWeightOfRecipe+'</td>';
+           
+		   keyItemDetails=keyItemDetails+'<td>'+VolumeofAnEach+'</td>';
 			
+
 			contentItemDIVDishNutrition=contentItemDIVDishNutrition+'<tr>'+keyItemDetails+ItemNutrition(currIngRef.getTarget(),currIngRef)+'</tr>';
-		}
+		
 	}
 	
 	var currDishSRRefs = item.getReferences(recSRRefType).iterator();
 	while (currDishSRRefs.hasNext()) 
 	{   	
 		var currSRRef = currDishSRRefs.next();
-		var showDishRefANData = currSRRef.getValue("IncludeIngSRIn_DigitalMenu").getSimpleValue();
-        var UsageUnit=currSRRef.getTarget().getValue("UsageUnit").getSimpleValue();
-        var BaseUnit=currSRRef.getTarget().getValue("BaseUnit").getSimpleValue();
-        var VolumeofAnEach=currSRRef.getTarget().getValue("VolumeOfAnEach").getSimpleValue();
 
-		if(showDishRefANData!="No")
-		{
+        var UsageUnit=currSRRef.getValue("UsageUnit").getSimpleValue();
+        var BaseUnit=currSRRef.getValue("IngredientBaseUnit").getSimpleValue();
+         var BaseUnitUsed=currSRRef.getValue("IngredientBaseUnitsUsed").getSimpleValue();
+		var NSFYield = currSRRef.getValue("NSFYield_RecipeToSR").getSimpleValue();
+		var CookedWeightOfRecipe= currSRRef.getValue("WeightOfAnEach_NSF").getSimpleValue();
+		var VolumeofAnEach=currSRRef.getValue("VolumeOfAnEach").getSimpleValue();
+
+		
 			var ObjectType=currSRRef.getTarget().getObjectType().getID();
 			var ItemID=currSRRef.getTarget().getID();
 			var ItemName=currSRRef.getTarget().getValue("DigitalMenuName_NSF").getSimpleValue();
@@ -499,7 +513,7 @@ function getIngSRContent(currSM,item)
 			keyItemDetails=keyItemDetails+'<td>'+node.getName()+'</td>';
 			keyItemDetails=keyItemDetails+'<td>'+subMenuName+'</td>';
             if (ObjectType == "DishRecipe") {
-                keyItemDetails = keyItemDetails + '<td style="background-color: green;">' + ObjectType + '</td>';
+                keyItemDetails = keyItemDetails + '<td style="background-color: blue;">' + ObjectType + '</td>';
             } else if (ObjectType == "Ingredient") {
                 keyItemDetails = keyItemDetails + '<td style="background-color: yellow;">' + ObjectType + '</td>';
             }  else if (ObjectType == "Guest Choice") {
@@ -513,16 +527,19 @@ function getIngSRContent(currSM,item)
 			keyItemDetails=keyItemDetails+'<td>'+CoreDishID+'</td>';
 			keyItemDetails=keyItemDetails+'<td>'+ItemID+'</td>';
 			keyItemDetails=keyItemDetails+'<td>'+ItemName+'</td>';
-            keyItemDetails=keyItemDetails+'<td>'+UsageUnit+'</td>';
+           	keyItemDetails=keyItemDetails+'<td>'+""+'</td>';
+		   keyItemDetails=keyItemDetails+'<td>'+BaseUnitUsed+'</td>';
+				keyItemDetails=keyItemDetails+'<td>'+""+'</td>';
+			keyItemDetails=keyItemDetails+'<td>'+UsageUnit+'</td>';
             keyItemDetails=keyItemDetails+'<td>'+BaseUnit+'</td>';
-            keyItemDetails=keyItemDetails+'<td>'+VolumeofAnEach+'</td>';
+            keyItemDetails=keyItemDetails+'<td>'+NSFYield+'</td>';
+            keyItemDetails=keyItemDetails+'<td>'+CookedWeightOfRecipe+'</td>';
+           
 			keyItemDetails=keyItemDetails+'<td>'+""+'</td>';
-	keyItemDetails=keyItemDetails+'<td>'+""+'</td>';
-	keyItemDetails=keyItemDetails+'<td>'+""+'</td>';
-			
+				
 			
 			contentItemDIVDishNutrition=contentItemDIVDishNutrition+'<tr>'+keyItemDetails+ItemNutrition(currSRRef.getTarget(),currSRRef)+'</tr>';	
-		}
+		
 	}
 	return (contentItemDIVDishNutrition);
 }
