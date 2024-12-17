@@ -123,3 +123,41 @@ function createRefsandCopyAttributes(currObj,newObj,newprod)
 
 	
 }
+// copy attribute values
+function copyAttValues(){
+var myDRVals = node.getValues();
+	
+logger.info("myDRVals.size():	"+ myDRVals.size());
+for(var myDRVal in Iterator(myDRVals)){
+
+	var currDRAttID = myDRVal.getAttribute().getID();
+	var currDRVal = myDRVal.getSimpleValue();
+		
+	if(node.getValue(currDRAttID).isDerived() == true){
+		//logger.info("Attr skipped- "+currDRAttID);
+		//check if a calced att first - don't copy
+	}else{
+		newDish.getValue(currDRAttID).setSimpleValue(currDRVal);
+		logger.info(currDRAttID+" = "+currDRVal);
+	//end if
+	}
+//end for
+}
+
+with (newDish) {
+	//logger.info("inside with");
+	setName(newDishName);
+	getValue("DishRecipeName").setSimpleValue(newDishName);
+	getValue("DishStatus").setLOVValueByID("DishStatus1");
+	getValue("DishRecipeReworkComment").setSimpleValue("");
+	getValue("DishAmendmentCommentHistory").setSimpleValue("");
+	getValue("DishRecipeRejectComment").setSimpleValue("");
+}	
+//####################### copy dish recipe attributes #####################/END/
+logger.info("out with");
+logger.info(newDish);
+//initiate new dish into the WF
+newDish.startWorkflowByID("DishtoMenuWorkflow", "Started from Business Action CopyDishandInitiateinDishToMenuWF_WebUI");
+logger.info(newDish.getID()+"  initiated into WF");
+
+}
