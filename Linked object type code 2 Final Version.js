@@ -27,10 +27,12 @@ while (IngRefsBy.hasNext()) {
     logger.info(RefLink);
     if (RefLink == "RecipeToIngredient") {
         var DishRecipe = RefBys.getSource();
-        DRArray.push(DishRecipe.getID());
+      
         var newDR = createDups(DishRecipe);
+		  DRArray.push({old : DishRecipe.getID() , newD : newDR});
         logger.info(newDR);
         collectReferences(DishRecipe, newDR, DishtoUPRef);
+        collectReferences(DishRecipe, newDR, DishtoGCRef);
     }
 
 }
@@ -56,7 +58,7 @@ function collectReferences(olddish, newDish, refType) {
             var ref = refs.next();
             var UP = ref.getTarget();
             var newUP = createDups(UP);
-
+			UPArray.push({old : UP.getID() , newD : newUP});
             var newDRUPRef = createRefsandCopyAttributes(olddish, newDish, UP, newUP, "Upgrade", ref);
 
 
@@ -78,17 +80,31 @@ function collectReferences(olddish, newDish, refType) {
         }
     }
     if (refType == "GuestChoice") {
-        var refs = dish.getReferences(refType).iterator();
+    	logger.info("GC ");
+        var refs = olddish.getReferences(refType).iterator();
         while (refs.hasNext()) {
             var ref = refs.next();
             var GC = ref.getTarget();
+			 var newGC = createDups(GC);
+			GCArray.push({old : GC.getID() , newD : newGC});
+            var newDRGCRef = createRefsandCopyAttributes(olddish, newDish, GC, newGC, "GuestChoice", ref);
+
+			
             var GCtoSR = GC.getReferences(GCtoSRRef).iterator();
             while (GCtoSR.hasNext()) {
                 var GCSRRef = GCtoSR.next();
                 var CurrSR = GCSRRef.getTarget();
                 // IngArr.push(CurrSR);
-                getIngDetails(CurrSR);
-                collectSubRecipes(CurrSR);
+              //  getIngDetails(CurrSR);
+                //collectSubRecipes(CurrSR);
+				
+				var newSR = createDups(CurrSR);
+
+                var newGCSRRef = createRefsandCopyAttributes(GC, newGC, CurrSR, newSR, "GuestChoicetoSubRecipe", GCSRRef);
+
+                collectSubRecipes(GC, newGC, CurrSR, newSR);
+				
+				
             }
         }
     }
@@ -117,6 +133,7 @@ function collectSubRecipes(UP, newUP, dish, newDish) {
             // IngArr.push(subDish);
             //getIngDetails(subDish);
             var newSR = createDups(subDish);
+			  DRArray.push({old : subDish.getID() , newD : newSR});
             var newSRtoSRRef = createRefsandCopyAttributes(dish, newDish, subDish, newSR, "RecipeToSubRecipe", ref);
 
             //collectReferences(node, DishtoUPRef);
@@ -138,7 +155,22 @@ function removedups(arr) {
     return uniqueArray.join("<br>");
 }
 
+function checkifAlreadyExists(ObjArray,currObj,ObjectType,currParent)
+{
+	
+	  var existingDuplicate = ObjArray.find(item => item.old == currObj.getID());
 
+    if (existingDuplicate) {
+        // If the duplicate exists, return the existing duplicate (newD)
+       
+        return existingDuplicate.newD;
+    } else {
+			var newObj = currParent.createProduct(null, ObjectType);
+       // ObjArray.push({ old: DishRecipe.getID(), newD: newDR });
+        return newObj;
+    }
+	
+}
 
 function createDups(currObj) {
     var currParent = currObj.getParent();
@@ -147,7 +179,21 @@ function createDups(currObj) {
     newName = newName.trim();
     var ObjectType = currObj.getObjectType().getID();
     try {
-        var newObj = currParent.createProduct(null, ObjectType);
+		if(ObjectType == "DishRecipe")
+		{
+				var newObj  = checkifAlreadyExists(DRArray,currObj,ObjectType,currParent);
+		
+		}
+		else if(ObjectType == "UpgradeObj")
+		{
+			var newObj  = checkifAlreadyExists(UPArray,currObj,ObjectType,currParent);
+		}
+		else if(ObjectType == "GuestChoiceObj")
+		{
+				var newObj  = checkifAlreadyExists(GCArray,currObj,ObjectType,currParent);
+		}
+		
+       // var newObj = currParent.createProduct(null, ObjectType);
         newObj.setName(newName);
         logger.info(" sending :" + currObj.getID() + " : " + newObj.getID());
         copyAttValues(currObj, newObj);
@@ -159,6 +205,8 @@ function createDups(currObj) {
 }
 
 function createRefsandCopyAttributes(oldObj, newObj1, oldObj2, newObj2, reftype, oldref) {
+	logger.info(newObj1);
+	logger.info(newObj2);
     var newRef = newObj1.createReference(newObj2, reftype);
 
     if (oldObj.getObjectType().getID() == "DishRecipe" && newObj1.getObjectType().getID() == "DishRecipe") {
@@ -171,6 +219,13 @@ function createRefsandCopyAttributes(oldObj, newObj1, oldObj2, newObj2, reftype,
     } else if (oldObj.getObjectType().getID() == "UpgradeObj" && newObj1.getObjectType().getID() == "UpgradeObj") {
         try {
             var newRef2 = newObj1.createReference(oldObj, "NewUptoOldUP");
+        } catch (error) {
+            logger.info("already refernced");
+        }
+    }
+	else if (oldObj.getObjectType().getID() == "GuestChoiceObj" && newObj1.getObjectType().getID() == "GuestChoiceObj") {
+        try {
+            var newRef3 = newObj1.createReference(oldObj, "NewGCtoOldGC");
         } catch (error) {
             logger.info("already refernced");
         }
@@ -191,6 +246,13 @@ function createRefsandCopyAttributes(oldObj, newObj1, oldObj2, newObj2, reftype,
             logger.info("already refernced");
         }
         logger.info("4");
+    }
+	else if (oldObj2.getObjectType().getID() == "GuestChoiceObj" && newObj2.getObjectType().getID() == "GuestChoiceObj") {
+        try {
+            var newRef5 = newObj2.createReference(oldObj2, "NewGCtoOldGC");
+        } catch (error) {
+            logger.info("already refernced");
+        }
     }
 
 
